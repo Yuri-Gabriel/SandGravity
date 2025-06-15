@@ -8,19 +8,25 @@
 
 #include "LinkedList.hpp"
 #include "Cube.hpp"
+#include "Vertice.hpp"
 
 using namespace std;
 
+int Vertice::windowWidth = 0;
+int Vertice::windowHeight = 0;
+
 class Window {
 public:
+    
     Window(int width, int height, string title) {
         this->width = width;
         this->height = height;
         this->title = title;
+        Vertice::windowWidth = width;
+        Vertice::windowHeight = height;
     }
 
     void start() {
-
         if (!glfwInit()) {
             cerr << "Erro ao inicializar a GLFW." << endl;
             return;
@@ -29,12 +35,6 @@ public:
         GLFWwindow* window = glfwCreateWindow(
             this->width, this->height, this->title.c_str(), NULL, NULL
         );
-        this->cubes.add(Cube(
-            Vertice(-0.05f, 0.05f),
-            Vertice(0.05f, 0.05f),
-            Vertice(-0.05f, -0.05f),
-            Vertice(0.05f, -0.05f)
-        ));
 
         glfwMakeContextCurrent(window);
         glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -46,7 +46,7 @@ public:
             glfwPollEvents();
 
             this->mouse_button_pressed_callback(window);
-            this->render();
+            this->render(); 
         }
 
         glfwDestroyWindow(window);
@@ -69,6 +69,7 @@ private:
     void mouse_button_pressed_callback(GLFWwindow* window) {
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             // adiciona um cubo na lista
+            this->cubes.add(Cube(x_cursor, y_cursor, 10, 10));
             printf("x: %.2f\ny: %.2f\n", x_cursor, y_cursor);
         }
     }
@@ -95,10 +96,9 @@ private:
         });
 
         glEnd();
-        
-            
+    }
 
-            
-        
+    float mapToRange(float xOriginal) {
+        return -1.0f + ((xOriginal - 0.0f) / (this->width - 0.0f)) * (1.0f - -1.0f);
     }
 };

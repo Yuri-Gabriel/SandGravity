@@ -7,14 +7,14 @@ class Cube {
         Vertice vertices[4];
 
         Cube(
-            Vertice top_left_pos,
-            Vertice top_right_pos,
-            Vertice botton_left_pos,
-            Vertice botton_right_pos
+            int xPos,
+            int yPos,
+            int width,
+            int height
         ) {
-            this->vertices[0] = top_left_pos;
-            this->vertices[1] = top_right_pos;
-            this->vertices[2] = botton_left_pos;
-            this->vertices[3] = botton_right_pos;
+            this->vertices[0] = Vertice(xPos, yPos);//top_left_pos;
+            this->vertices[1] = Vertice(xPos + width, yPos);//top_right_pos;
+            this->vertices[2] = Vertice(xPos, yPos + height);//botton_left_pos;
+            this->vertices[3] = Vertice(xPos + width, yPos + height);//botton_right_pos;
         }
 };
