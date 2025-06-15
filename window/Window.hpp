@@ -24,6 +24,10 @@ public:
         this->title = title;
         Vertice::windowWidth = width;
         Vertice::windowHeight = height;
+        this->cubeSize = 10;
+        this->red = 1.0f;
+        this->green = 0.0f;
+        this->blue = 0.0f;
     }
 
     void start() {
@@ -31,6 +35,8 @@ public:
             cerr << "Erro ao inicializar a GLFW." << endl;
             return;
         }
+
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         GLFWwindow* window = glfwCreateWindow(
             this->width, this->height, this->title.c_str(), NULL, NULL
@@ -46,7 +52,8 @@ public:
             glfwPollEvents();
 
             this->mouse_button_pressed_callback(window);
-            this->render(); 
+            this->drawCubes(); 
+            this->gravity();
         }
 
         glfwDestroyWindow(window);
@@ -55,22 +62,34 @@ public:
 private:
     int width;
     int height;
-    inline static double x_cursor = 0.0;
-    inline static double y_cursor = 0.0;
+    int cubeSize;
+    inline static int x_cursor = 0.0;
+    inline static int y_cursor = 0.0;
     string title;
-    LinkedList<Cube> cubes;
+    inline static LinkedList<Cube> cubes;
+    float red;
+    float green;
+    float blue;
 
     static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-        x_cursor = xpos;
-        y_cursor = ypos;
+        x_cursor = (int) xpos;
+        y_cursor = (int) ypos;
         
     }
 
     void mouse_button_pressed_callback(GLFWwindow* window) {
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            // adiciona um cubo na lista
-            this->cubes.add(Cube(x_cursor, y_cursor, 10, 10));
-            printf("x: %.2f\ny: %.2f\n", x_cursor, y_cursor);
+            int xGrid = static_cast<int>(x_cursor) / this->cubeSize;
+            int alignedX = xGrid * this->cubeSize;
+
+            int yGrid = static_cast<int>(y_cursor) / this->cubeSize;
+            int alignedY = yGrid * this->cubeSize;
+
+            Cube cube(alignedX, alignedY, this->cubeSize, this->cubeSize);
+            cube.setColor(this->red, this->green, this->blue);
+
+            this->cubes.add(cube);
+            this->updateCubeColor();
         }
     }
 
@@ -78,14 +97,14 @@ private:
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
-    void render() {
+    void drawCubes() {
         // desenhar todos os cubos da lista
         glClear(GL_COLOR_BUFFER_BIT);
         
         glBegin(GL_TRIANGLES);
-        glColor3f(1.0f, 0.0f, 0.0f);
 
         this->cubes.forEach([](Cube cube) {
+            glColor3f(cube.red, cube.green, cube.blue);
             glVertex2f(cube.vertices[0].x, cube.vertices[0].y);
             glVertex2f(cube.vertices[2].x, cube.vertices[2].y);
             glVertex2f(cube.vertices[1].x, cube.vertices[1].y);
@@ -98,7 +117,44 @@ private:
         glEnd();
     }
 
-    float mapToRange(float xOriginal) {
-        return -1.0f + ((xOriginal - 0.0f) / (this->width - 0.0f)) * (1.0f - -1.0f);
+    void gravity() {
+        int windowHeight = this->height;
+        int cSize = this->cubeSize;
+        this->cubes.forEach([&windowHeight, &cSize](Cube& cube) {
+            if (cube.yPos + cube.height >= windowHeight) return;
+
+            if (haveCubeBelow(cube)) return;
+
+            cube.updatePosition(cube.xPos, cube.yPos + cSize);
+            
+        });
+    }
+
+    static bool haveCubeBelow(const Cube& currentCube) {
+        bool have = false;
+        cubes.forEachBreakable([&currentCube, &have](Cube& otherCube) -> bool {
+            if (&otherCube == &currentCube) return false;
+
+            if (otherCube.xPos == currentCube.xPos &&
+                otherCube.yPos == currentCube.yPos + currentCube.height) {
+                have = true;
+                return true; 
+            }
+            return false;
+        });
+        return have;
+    }
+
+    void updateCubeColor() {
+        if(this->green < 1.0f) {
+            this->green += 0.1f;
+            return;
+        }
+        if(this->blue < 1.0f) {
+            this->blue += 0.1f;
+            return;
+        }
+        this->green = 0.0f;
+        this->blue = 0.0f;
     }
 };

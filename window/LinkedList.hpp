@@ -62,8 +62,15 @@ public:
             func(current->value);
             current = current->next;
         }
-        
-        
+    }
+
+    template<typename Func>
+    void forEachBreakable(Func func) {
+        Node<T>* current = this->head;
+        while(current != nullptr) {
+            if(func(current->value)) break;
+            current = current->next;
+        }
     }
 
     void remove(int index) {
